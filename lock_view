@@ -1,0 +1,60 @@
+Sub CATMain()
+If TypeName(CATIA.ActiveDocument) = "DrawingDocument" Then
+    Dim MyDrawingView As DrawingView
+    Dim MyDrawingSheet As DrawingSheet
+    Dim MyDrawingRoot As DrawingRoot
+    Dim lockStatus As Boolean
+    Set drawingDocument1 = CATIA.ActiveDocument
+    Set MySelection = drawingDocument1.Selection
+    For i = 1 To MySelection.Count
+        If MySelection.Item(i).Type = "DrawingView" Then
+            Set MyDrawingView = MySelection.Item(i).Value
+            If i = 1 Then
+                lockStatus = eval(MyDrawingView)
+            End If
+            View MyDrawingView, lockStatus
+        End If
+        If MySelection.Item(i).Type = "DrawingSheet" Then
+            Set MyDrawingSheet = MySelection.Item(i).Value
+            If i = 1 Then
+                On Error Resume Next
+                lockStatus = eval(MyDrawingSheet.Views.Item(1))
+            End If
+            Sheet MyDrawingSheet, lockStatus
+        End If
+        If MySelection.Item(i).Type = "DrawingRoot" Then
+            Set MyDrawingRoot = MySelection.Item(i).Value
+            If i = 1 Then
+                On Error Resume Next
+                lockStatus = eval(MyDrawingRoot.Sheets.Item(1).Views.Item(1))
+            End If
+            Root MyDrawingRoot, lockStatus
+        End If
+    Next i
+End If
+End Sub
+
+Function eval(MyDrawingView As DrawingView)
+    If Str(MyDrawingView.lockStatus) = "True" Then
+        eval = False
+    Else
+        eval = True
+    End If
+End Function
+
+Sub View(MyDrawingView As DrawingView, status)
+    MyDrawingView.lockStatus = status
+End Sub
+
+Sub Sheet(MyDrawingSheet As DrawingSheet, status)
+    For i = 1 To MyDrawingSheet.Views.Count
+        View MyDrawingSheet.Views.Item(i), status
+    Next i
+End Sub
+
+Sub Root(MyDrawingRoot As DrawingRoot, status)
+    For i = 1 To MyDrawingRoot.Sheets.Count
+        Sheet MyDrawingRoot.Sheets.Item(i), status
+    Next i
+End Sub
+
